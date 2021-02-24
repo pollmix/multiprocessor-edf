@@ -2,6 +2,7 @@
 import json
 from functools import reduce
 import matplotlib.pyplot as plt
+from collections import Counter
 
 
 def generate_gnatt_chart(graph, time_span, name='figure'):
@@ -161,20 +162,20 @@ def non_preemptive(queue):
 #     ["T4", 2, 8, 8],
 # ]
 
-# given_tasks = [
-#     ["T1", 2, 5, 5],
-#     ["T2", 2, 4, 6],
-#     ["T3", 2, 4, 7],
-#     ["T4", 2, 3, 6],
-# ]
-
 given_tasks = [
     ["T1", 2, 5, 5],
     ["T2", 2, 4, 6],
-    ["T3", 3, 3, 4],
-    ["T4", 2, 3, 4],
-    ["T5", 2, 3, 4],
+    ["T3", 2, 4, 7],
+    ["T4", 2, 3, 6],
 ]
+
+# given_tasks = [
+#     ["T1", 2, 5, 5],
+#     ["T2", 2, 4, 6],
+#     ["T3", 3, 3, 4],
+#     ["T4", 2, 3, 4],
+#     ["T5", 2, 3, 4],
+# ]
 
 
 if __name__ == "__main__":
@@ -207,3 +208,8 @@ if __name__ == "__main__":
 
     generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
     generate_gnatt_chart(network_graph_data, span, 'Network CPU EDF')
+
+    if len(offloadable):
+        print('Missed job count for each task')
+        for key, value in Counter([job[0] for job in offloadable]).items():
+            print(key, value)
