@@ -235,9 +235,6 @@ if __name__ == "__main__":
     network_cpu_jobs, network_job_response_time = non_preemptive(offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
 
-    # generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
-    # generate_gnatt_chart(network_graph_data, span, 'Network CPU EDF')
-
     print('Primary CPU Job response time')
     for job in sorted(primary_job_response_time):
         print(job)
@@ -246,15 +243,10 @@ if __name__ == "__main__":
         # print('Network CPU Job response time')
         # for job in sorted(network_job_response_time):
         #     print(job)
-        
-        
+
         print('Missed job count for each task')
         for key, value in Counter([job[0] for job in offloadable]).items():
             print(key, value)
 
-
-'''
-t1 job miss
-t1 job1 response time job2 time
-
-'''
+    generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
+    generate_gnatt_chart(network_graph_data, span, 'Network CPU EDF')
