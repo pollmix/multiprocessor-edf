@@ -72,10 +72,17 @@ def get_deadline_table(jobs):
     return table
 
 
-def preemptive(tasks, time_span):
+def task_period(tasks):
+    tasks_period_map = {}
+
+    for task in tasks:
+        tasks_period_map[task[0]] = task[3]
+
+    return tasks_period_map
+
+
+def create_queue(tasks, time_span):
     queue = []
-    output = []
-    leftover = []
 
     for task in tasks:
         task_name, execution_time, deadline, period = task
@@ -88,6 +95,14 @@ def preemptive(tasks, time_span):
 
     print('sorted queue', queue)
 
+    return queue
+
+
+def preemptive(queue, tasks_period_map):
+    output = []
+    leftover = []
+    task_counter = []
+    job_response_time = []
     cpu_current_time = 0
 
     for task in queue:
@@ -95,6 +110,7 @@ def preemptive(tasks, time_span):
         task_start_time = max(task_start_time, cpu_current_time)
         task_end_time = task_start_time + execution_time
         deadline_missed = task_end_time > task_deadline
+        task_counter.append(task_name)
 
         job = (task_name,
                execution_time,
@@ -105,6 +121,9 @@ def preemptive(tasks, time_span):
         print('task_name, execution_time, task_start_time, task_end_time, deadline_missed', job)
 
         if not deadline_missed:
+            task_count = task_counter.count(task_name)
+            job_response_time.append(
+                f'{task_name} Job{task_count}: {task_start_time - (task_count - 1) * tasks_period_map[task_name]}')
             cpu_current_time = task_end_time
             output.append(job)
         else:
@@ -112,10 +131,12 @@ def preemptive(tasks, time_span):
 
     print('leftover', leftover)
 
-    return output, leftover
+    return output, leftover, job_response_time
 
 
-def non_preemptive(queue):
+def non_preemptive(queue, tasks_period_map):
+    task_counter = []
+    job_response_time = []
     leftover = []
     output = []
     cpu_current_time = 0
@@ -134,19 +155,24 @@ def non_preemptive(queue):
 
         print('task_name, execution_time, task_start_time, task_end_time, deadline_missed', job)
 
+        task_count = task_counter.count(task_name)
+        job_response_time.append(
+            f'{task_name} Job{task_count}: {task_start_time - (task_count - 1) * tasks_period_map[task_name]}')
+
         cpu_current_time = task_end_time
 
         output.append(job)
 
     print('leftover', leftover)
 
-    return output
+    return output, job_response_time
 
-# given_tasks = [
-#     ["T1", 1, 4, 4],
-#     ["T2", 2, 6, 6],
-#     ["T3", 3, 8, 8],
-# ]
+
+given_tasks = [
+    ["T1", 1, 4, 4],
+    ["T2", 2, 6, 6],
+    ["T3", 3, 8, 8],
+]
 
 
 # given_tasks = [
@@ -194,7 +220,10 @@ if __name__ == "__main__":
     #     given_tasks.append([task_name, execution_time, deadline, period])
 
     span = reduce(get_lcm, [task[2] for task in given_tasks])
-    primary_cpu_jobs, offloadable = preemptive(given_tasks, span)
+    tasks_period_map = task_period(given_tasks)
+    queue = create_queue(given_tasks, span)
+
+    primary_cpu_jobs, offloadable, primary_job_response_time = preemptive(queue, tasks_period_map)
     primary_graph_data = get_graph(primary_cpu_jobs)
 
     # print("Deadline missed for each task: ")
@@ -203,13 +232,29 @@ if __name__ == "__main__":
 
     # generate_gnatt_chart(primary_graph_data, 30)
 
-    network_cpu_jobs = non_preemptive(offloadable)
+    network_cpu_jobs, network_job_response_time = non_preemptive(offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
 
-    generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
-    generate_gnatt_chart(network_graph_data, span, 'Network CPU EDF')
+    # generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
+    # generate_gnatt_chart(network_graph_data, span, 'Network CPU EDF')
+
+    print('Primary CPU Job response time')
+    for job in sorted(primary_job_response_time):
+        print(job)
 
     if len(offloadable):
+        # print('Network CPU Job response time')
+        # for job in sorted(network_job_response_time):
+        #     print(job)
+        
+        
         print('Missed job count for each task')
         for key, value in Counter([job[0] for job in offloadable]).items():
             print(key, value)
+
+
+'''
+t1 job miss
+t1 job1 response time job2 time
+
+'''
