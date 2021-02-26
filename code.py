@@ -3,11 +3,12 @@ import json
 from functools import reduce
 import matplotlib.pyplot as plt
 from collections import Counter
+import math
 
 
 def generate_gnatt_chart(graph, time_span, name='figure'):
-    # if time_span > 30:
-    #     time_span = 30
+    if time_span > 60:
+        time_span = 60
 
     fig, gnt = plt.subplots()
     task_names = [task[0] for task in graph]
@@ -46,8 +47,8 @@ def get_lcm(first_number, second_number):
 def get_graph(jobs):
     graph = {}
 
-    # if len(jobs) > 30:
-    #     jobs = jobs[:30]
+    if len(jobs) > 60:
+        jobs = jobs[:60]
 
     for job in jobs:
         task_name, execution_time, task_start_time, task_end_time, _ = job
@@ -195,6 +196,7 @@ given_tasks = [
     ["T4", 2, 3, 6],
 ]
 
+
 # given_tasks = [
 #     ["T1", 2, 5, 5],
 #     ["T2", 2, 4, 6],
@@ -202,6 +204,27 @@ given_tasks = [
 #     ["T4", 2, 3, 4],
 #     ["T5", 2, 3, 4],
 # ]
+
+
+given_tasks2 = [
+    ["T1", 3.5, 7, 10],
+    ["T2", 2, 4, 8],
+    ["T3", 7, 9, 12],
+]
+
+task_bw_map = {
+    "T1": 4 * 8,
+    "T2": 3 * 8,
+    "T3": 6 * 8,
+}
+
+
+def get_execution_time(no_of_instructions, cpu_capacity):
+    return math.ceil(no_of_instructions * 10 / cpu_capacity)
+
+
+def transfer_time(datasize, network_bw):
+    return math.ceil(datasize / network_bw)
 
 
 if __name__ == "__main__":
@@ -219,6 +242,31 @@ if __name__ == "__main__":
 
     #     given_tasks.append([task_name, execution_time, deadline, period])
 
+    v = 7.683
+    o = -4558.52
+    freq = 2.5  # cpu frequency in GHz
+    no_of_cores = 1
+
+    # parameter for cpu capacity calculation
+    scheduling_period = 10
+    # decision period in seconds
+    network_bandwidth = 16
+    # network BW in Mbps
+
+    cpu_capacity = (v * (freq*1000) + o) * no_of_cores * 0.001
+    # capacity in terms of millions of instruction
+    cpu_capacity = math.floor(cpu_capacity)
+    print(cpu_capacity)
+
+    given_tasks = []
+
+    for task in given_tasks2:
+        task_name, no_of_instructions, task_start_time, task_deadline = task
+        execution_time = get_execution_time(no_of_instructions, cpu_capacity)
+        given_tasks.append([task_name, execution_time, task_start_time, task_deadline])
+
+    print(given_tasks)
+
     span = reduce(get_lcm, [task[2] for task in given_tasks])
     tasks_period_map = task_period(given_tasks)
     queue = create_queue(given_tasks, span)
@@ -232,20 +280,29 @@ if __name__ == "__main__":
 
     # generate_gnatt_chart(primary_graph_data, 30)
 
-    network_cpu_jobs, network_job_response_time = non_preemptive(offloadable, tasks_period_map)
+    calc_offloadable = []
+
+    for task in offloadable:
+        task_name, execution_time, task_start_time, task_deadline = task
+        task_start_time += transfer_time(task_bw_map[task_name], network_bandwidth)
+        calc_offloadable.append([task_name, execution_time, task_start_time, task_deadline])
+
+    print('new start time after network transfer', calc_offloadable)
+
+    network_cpu_jobs, network_job_response_time = non_preemptive(calc_offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
 
     print('Primary CPU Job response time')
     for job in sorted(primary_job_response_time):
         print(job)
 
-    if len(offloadable):
+    if len(calc_offloadable):
         # print('Network CPU Job response time')
         # for job in sorted(network_job_response_time):
         #     print(job)
 
         print('Missed job count for each task')
-        for key, value in Counter([job[0] for job in offloadable]).items():
+        for key, value in Counter([job[0] for job in calc_offloadable]).items():
             print(key, value)
 
     generate_gnatt_chart(primary_graph_data, span, 'Primary CPU EDF')
