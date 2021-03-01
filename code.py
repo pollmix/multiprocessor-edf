@@ -242,6 +242,14 @@ if __name__ == "__main__":
 
     #     given_tasks.append([task_name, execution_time, deadline, period])
 
+    # v = float((input('Enter the value of v: ')))
+    # o = float((input('Enter the value of o: ')))
+    # freq = float((input('Enter the value of frequency: ')))
+    # no_of_cores = float((input('Enter the value of number of core: ')))
+    # scheduling_period = float((input('Enter the value of scheduling period: ')))
+    # network_bandwidth = float((input('Enter the value of network bandwidth: ')))
+
+
     v = 7.683
     o = -4558.52
     freq = 2.5  # cpu frequency in GHz
