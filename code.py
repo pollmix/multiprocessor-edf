@@ -261,8 +261,8 @@ if __name__ == "__main__":
     network_cpu_jobs, network_job_response_time = non_preemptive(calc_offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
 
-    # print('Primary CPU Job response time')
-    # print(primary_job_response_time)
+    print('Primary CPU Job response time')
+    print(primary_job_response_time)
     # for job in sorted(primary_job_response_time):
     #     print(job)
 
