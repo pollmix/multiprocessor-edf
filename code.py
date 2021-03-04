@@ -82,11 +82,20 @@ def task_period(tasks):
     return tasks_period_map
 
 
+def task_data_size(tasks):
+    task_data_size_map = {}
+
+    for task in tasks:
+        task_data_size_map[task[0]] = task[4]
+
+    return task_data_size_map
+
+
 def create_queue(tasks, time_span):
     queue = []
 
     for task in tasks:
-        task_name, execution_time, deadline, period = task
+        task_name, execution_time, deadline, period, data_size = task
 
         for i in range(0, time_span + 1 - period, period):
             task_deadline = i + deadline
@@ -94,7 +103,7 @@ def create_queue(tasks, time_span):
 
     queue = sorted(queue, key=lambda x: (x[3], x[2]))
 
-    print('sorted queue', queue)
+    print('Sorted queue', queue)
 
     return queue
 
@@ -164,63 +173,13 @@ def non_preemptive(queue, tasks_period_map):
 
         output.append(job)
 
-    print('leftover', leftover)
+    print('Leftover', leftover)
 
     return output, job_response_time
 
 
-given_tasks = [
-    ["T1", 1, 4, 4],
-    ["T2", 2, 6, 6],
-    ["T3", 3, 8, 8],
-]
-
-
-# given_tasks = [
-#     ["T1", 3, 7, 20],
-#     ["T2", 2, 8, 10],
-#     ["T3", 2, 4, 5],
-# ]
-
-# given_tasks = [
-#     ["T1", 2, 5, 5],
-#     ["T2", 2, 6, 6],
-#     ["T3", 2, 7, 7],
-#     ["T4", 2, 8, 8],
-# ]
-
-given_tasks = [
-    ["T1", 2, 5, 5],
-    ["T2", 2, 4, 6],
-    ["T3", 2, 4, 7],
-    ["T4", 2, 3, 6],
-]
-
-
-# given_tasks = [
-#     ["T1", 2, 5, 5],
-#     ["T2", 2, 4, 6],
-#     ["T3", 3, 3, 4],
-#     ["T4", 2, 3, 4],
-#     ["T5", 2, 3, 4],
-# ]
-
-
-given_tasks2 = [
-    ["T1", 3.5, 7, 10],
-    ["T2", 2, 4, 8],
-    ["T3", 7, 9, 12],
-]
-
-task_bw_map = {
-    "T1": 4 * 8,
-    "T2": 3 * 8,
-    "T3": 6 * 8,
-}
-
-
 def get_execution_time(no_of_instructions, cpu_capacity):
-    return math.ceil(no_of_instructions * 10 / cpu_capacity)
+    return math.ceil(no_of_instructions / cpu_capacity)
 
 
 def transfer_time(datasize, network_bw):
@@ -228,74 +187,74 @@ def transfer_time(datasize, network_bw):
 
 
 if __name__ == "__main__":
-    # [[task_name, execution_time, deadline, period]]
-    # given_tasks = []
-    # total_number_of_tasks = int(input("How many tasks to schedule: "))
-
-    # for i in range(1, total_number_of_tasks + 1):
-    #     task_name = f"T{i}"
-
-    #     execution_time, deadline, period = map(
-    #         int,
-    #         input(f"Enter the execution time, deadline and period of task {i}: ").split()
-    #     )
-
-    #     given_tasks.append([task_name, execution_time, deadline, period])
-
-    # v = float((input('Enter the value of v: ')))
-    # o = float((input('Enter the value of o: ')))
-    # freq = float((input('Enter the value of frequency: ')))
-    # no_of_cores = float((input('Enter the value of number of core: ')))
-    # scheduling_period = float((input('Enter the value of scheduling period: ')))
-    # network_bandwidth = float((input('Enter the value of network bandwidth: ')))
-
-
-    v = 7.683
-    o = -4558.52
-    freq = 2.5  # cpu frequency in GHz
-    no_of_cores = 1
-
-    # parameter for cpu capacity calculation
-    scheduling_period = 10
-    # decision period in seconds
-    network_bandwidth = 16
-    # network BW in Mbps
-
-    cpu_capacity = (v * (freq*1000) + o) * no_of_cores * 0.001
-    # capacity in terms of millions of instruction
-    cpu_capacity = math.floor(cpu_capacity)
-    print(cpu_capacity)
-
     given_tasks = []
+    total_number_of_tasks = int(input("How many tasks to schedule: "))
 
-    for task in given_tasks2:
-        task_name, no_of_instructions, task_start_time, task_deadline = task
+    for i in range(1, total_number_of_tasks + 1):
+        task_name = f"T{i}"
+
+        no_of_instructions, deadline, period, data_size = map(
+            int,
+            input(f"Enter the No of Instructions, Deadline, Period and Data sizeof task {i}: ").split()
+        )
+
+        given_tasks.append([task_name, no_of_instructions, deadline, period, data_size])
+        
+    # example task
+    # given_tasks = [
+    #     # task name, millions of instructions, dealine, period, data size
+    #     ["T1", 48, 7, 10, 32],
+    #     ["T2", 28, 4, 8, 24],
+    #     ["T3", 98, 9, 12, 32],
+    # ]
+
+    v = float((input('Enter the value of v: ')))
+    o = float((input('Enter the value of o: ')))
+    freq = float((input('Enter the value of frequency: ')))
+    no_of_cores = float((input('Enter the value of number of core: ')))
+    network_bandwidth = float((input('Enter the value of network bandwidth: ')))
+    # scheduling_period = float((input('Enter the value of scheduling period: ')))
+
+
+    # v = 7.683
+    # o = -4558.52
+    # freq = 2.5  # cpu frequency in GHz
+    # no_of_cores = 1
+    # network_bandwidth = 16 # network BW in Mbps
+    # scheduling_period = 10
+
+    cpu_capacity = ((v * (freq*1000) + o) * no_of_cores) * 0.001 # millons of instructions per milisecond
+    cpu_capacity = math.floor(cpu_capacity)
+    print('CPU Capacity: ', cpu_capacity)
+
+    calculated_tasks = []
+
+    for task in given_tasks:
+        task_name, no_of_instructions, deadline, period, data_size = task
         execution_time = get_execution_time(no_of_instructions, cpu_capacity)
-        given_tasks.append([task_name, execution_time, task_start_time, task_deadline])
+        calculated_tasks.append([task_name, execution_time, deadline, period, data_size])
 
-    print(given_tasks)
+    print(calculated_tasks)
 
-    span = reduce(get_lcm, [task[2] for task in given_tasks])
-    tasks_period_map = task_period(given_tasks)
-    queue = create_queue(given_tasks, span)
+    span = reduce(get_lcm, [task[2] for task in calculated_tasks])
+    queue = create_queue(calculated_tasks, span)
+    tasks_period_map = task_period(calculated_tasks)
+    task_data_size_map = task_data_size(calculated_tasks)
 
     primary_cpu_jobs, offloadable, primary_job_response_time = preemptive(queue, tasks_period_map)
     primary_graph_data = get_graph(primary_cpu_jobs)
 
     # print("Deadline missed for each task: ")
-    # print(get_deadline_table(edf_jobs))
-    # print(offloadable)
-
-    # generate_gnatt_chart(primary_graph_data, 30)
+    # print(get_deadline_table(queue))
 
     calc_offloadable = []
 
     for task in offloadable:
         task_name, execution_time, task_start_time, task_deadline = task
-        task_start_time += transfer_time(task_bw_map[task_name], network_bandwidth)
+        task_start_time += transfer_time(task_data_size_map[task_name], network_bandwidth)
         calc_offloadable.append([task_name, execution_time, task_start_time, task_deadline])
 
-    print('new start time after network transfer', calc_offloadable)
+    print('New start time after network transfer', calc_offloadable)
 
     network_cpu_jobs, network_job_response_time = non_preemptive(calc_offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
