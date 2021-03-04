@@ -112,7 +112,7 @@ def preemptive(queue, tasks_period_map):
     output = []
     leftover = []
     task_counter = []
-    job_response_time = []
+    job_response_time = {}
     cpu_current_time = 0
 
     for task in queue:
@@ -132,8 +132,11 @@ def preemptive(queue, tasks_period_map):
 
         if not deadline_missed:
             task_count = task_counter.count(task_name)
-            job_response_time.append(
-                f'{task_name} Job{task_count}: {task_start_time - (task_count - 1) * tasks_period_map[task_name]}')
+
+            if task_name not in job_response_time:
+                job_response_time[task_name] = {}
+
+            job_response_time[task_name][task_count] = task_start_time - (task_count - 1) * tasks_period_map[task_name]
             cpu_current_time = task_end_time
             output.append(job)
         else:
@@ -199,7 +202,7 @@ if __name__ == "__main__":
         )
 
         given_tasks.append([task_name, no_of_instructions, deadline, period, data_size])
-        
+
     # example task
     # given_tasks = [
     #     # task name, millions of instructions, dealine, period, data size
@@ -215,7 +218,6 @@ if __name__ == "__main__":
     network_bandwidth = float((input('Enter the value of network bandwidth: ')))
     # scheduling_period = float((input('Enter the value of scheduling period: ')))
 
-
     # v = 7.683
     # o = -4558.52
     # freq = 2.5  # cpu frequency in GHz
@@ -223,7 +225,7 @@ if __name__ == "__main__":
     # network_bandwidth = 16 # network BW in Mbps
     # scheduling_period = 10
 
-    cpu_capacity = ((v * (freq*1000) + o) * no_of_cores) * 0.001 # millons of instructions per milisecond
+    cpu_capacity = ((v * (freq*1000) + o) * no_of_cores) * 0.001  # millons of instructions per milisecond
     cpu_capacity = math.floor(cpu_capacity)
     print('CPU Capacity: ', cpu_capacity)
 
@@ -260,8 +262,9 @@ if __name__ == "__main__":
     network_graph_data = get_graph(network_cpu_jobs)
 
     print('Primary CPU Job response time')
-    for job in sorted(primary_job_response_time):
-        print(job)
+    print(primary_job_response_time)
+    # for job in sorted(primary_job_response_time):
+    #     print(job)
 
     if len(calc_offloadable):
         # print('Network CPU Job response time')
