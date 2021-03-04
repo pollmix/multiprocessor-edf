@@ -262,9 +262,10 @@ if __name__ == "__main__":
     network_graph_data = get_graph(network_cpu_jobs)
 
     print('Primary CPU Job response time')
-    print(primary_job_response_time)
-    # for job in sorted(primary_job_response_time):
-    #     print(job)
+    for task in sorted(primary_job_response_time.items()):
+        print(task[0])
+        for key, value in task[1].items():
+            print('Job', key, ', Response time', value)
 
     if len(calc_offloadable):
         # print('Network CPU Job response time')
