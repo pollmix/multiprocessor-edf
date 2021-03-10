@@ -73,6 +73,15 @@ def get_deadline_table(jobs):
     return table
 
 
+def task_no_of_ins(tasks):
+    tasks_period_map = {}
+
+    for task in tasks:
+        tasks_period_map[task[0]] = task[1]
+
+    return tasks_period_map
+
+
 def task_period(tasks):
     tasks_period_map = {}
 
@@ -191,43 +200,46 @@ def transfer_time(datasize, network_bw):
 
 if __name__ == "__main__":
     given_tasks = []
-    total_number_of_tasks = int(input("How many tasks to schedule: "))
+    # total_number_of_tasks = int(input("How many tasks to schedule: "))
 
-    for i in range(1, total_number_of_tasks + 1):
-        task_name = f"T{i}"
+    # for i in range(1, total_number_of_tasks + 1):
+    #     task_name = f"T{i}"
 
-        no_of_instructions, deadline, period, data_size = map(
-            int,
-            input(f"Enter the No of Instructions, Deadline, Period and Data sizeof task {i}: ").split()
-        )
+    #     no_of_instructions, deadline, period, data_size = map(
+    #         int,
+    #         input(f"Enter the No of Instructions, Deadline, Period and Data sizeof task {i}: ").split()
+    #     )
 
-        given_tasks.append([task_name, no_of_instructions, deadline, period, data_size])
+    #     given_tasks.append([task_name, no_of_instructions, deadline, period, data_size])
 
     # example task
-    # given_tasks = [
-    #     # task name, millions of instructions, dealine, period, data size
-    #     ["T1", 48, 7, 10, 32],
-    #     ["T2", 28, 4, 8, 24],
-    #     ["T3", 98, 9, 12, 32],
-    # ]
+    given_tasks = [
+        # task name, millions of instructions, dealine, period, data size
+        ["T1", 48, 7, 10, 32],
+        ["T2", 28, 4, 8, 24],
+        ["T3", 98, 9, 12, 32],
+    ]
 
-    v = float((input('Enter the value of v: ')))
-    o = float((input('Enter the value of o: ')))
-    freq = float((input('Enter the value of frequency: ')))
-    no_of_cores = float((input('Enter the value of number of core: ')))
-    network_bandwidth = float((input('Enter the value of network bandwidth: ')))
+    # v = float((input('Enter the value of v: ')))
+    # o = float((input('Enter the value of o: ')))
+    # freq = float((input('Enter the value of frequency: ')))
+    # no_of_cores = float((input('Enter the value of number of core: ')))
+    # network_bandwidth = float((input('Enter the value of network bandwidth: ')))
     # scheduling_period = float((input('Enter the value of scheduling period: ')))
 
-    # v = 7.683
-    # o = -4558.52
-    # freq = 2.5  # cpu frequency in GHz
-    # no_of_cores = 1
-    # network_bandwidth = 16 # network BW in Mbps
+    v = 7.683
+    o = -4558.52
+    freq = 2.5  # cpu frequency in GHz
+    no_of_cores = 1
+    network_bandwidth = 16  # network BW in Mbps
     # scheduling_period = 10
 
     cpu_capacity = ((v * (freq*1000) + o) * no_of_cores) * 0.001  # millons of instructions per milisecond
     cpu_capacity = math.floor(cpu_capacity)
+    network_cpu_capacity = math.floor(cpu_capacity * 5)
     print('CPU Capacity: ', cpu_capacity)
+    print('Network CPU Capacity: ', network_cpu_capacity)
+    task_no_of_ins_map = task_no_of_ins(given_tasks)
 
     calculated_tasks = []
 
@@ -254,6 +266,7 @@ if __name__ == "__main__":
     for task in offloadable:
         task_name, execution_time, task_start_time, task_deadline = task
         task_start_time += transfer_time(task_data_size_map[task_name], network_bandwidth)
+        execution_time = get_execution_time(task_no_of_ins_map[task_name], network_cpu_capacity)
         calc_offloadable.append([task_name, execution_time, task_start_time, task_deadline])
 
     print('New start time after network transfer', calc_offloadable)
