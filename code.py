@@ -51,7 +51,7 @@ def get_graph(jobs):
         jobs = jobs[:60]
 
     for job in jobs:
-        task_name, execution_time, task_start_time, task_end_time, _ = job
+        task_name, execution_time, task_start_time, task_end_time, _, _ = job
         node = (task_start_time, execution_time)
 
         if task_name not in graph:
@@ -112,44 +112,53 @@ def create_queue(tasks, time_span):
 
     queue = sorted(queue, key=lambda x: (x[3], x[2]))
 
-    print('Sorted queue', queue)
+    task_counter = []
+    modified_queue = []
 
-    return queue
+    # adding job number
+    for q in queue:
+        task_counter.append(q[0])
+        task_count = task_counter.count(q[0])
+        q = list(q)
+        q.append(task_count)
+        q = tuple(q)
+        modified_queue.append(q)
+
+    print('Sorted queue', modified_queue)
+
+    return modified_queue
 
 
 def preemptive(queue, tasks_period_map):
     output = []
     leftover = []
-    task_counter = []
     job_response_time = {}
     cpu_current_time = 0
 
     for task in queue:
-        task_name, execution_time, task_start_time, task_deadline = task
+        task_name, execution_time, task_start_time, task_deadline, job_no = task
         task_start_time = max(task_start_time, cpu_current_time)
         task_end_time = task_start_time + execution_time
         deadline_missed = task_end_time > task_deadline
-        task_counter.append(task_name)
 
         job = (task_name,
                execution_time,
                task_start_time,
                task_end_time,
-               deadline_missed)
+               deadline_missed,
+               job_no)
 
-        print('task_name, execution_time, task_start_time, task_end_time, deadline_missed', job)
+        print('task_name, execution_time, task_start_time, task_end_time, deadline_missed, job_no', job)
 
         if not deadline_missed:
-            task_count = task_counter.count(task_name)
-
             if task_name not in job_response_time:
                 job_response_time[task_name] = {}
 
-            job_response_time[task_name][task_count] = task_start_time - (task_count - 1) * tasks_period_map[task_name]
+            job_response_time[task_name][job_no] = task_start_time - (job_no - 1) * tasks_period_map[task_name]
             cpu_current_time = task_end_time
             output.append(job)
         else:
-            leftover.append(job[:-1])
+            leftover.append(job)
 
     print('leftover', leftover)
 
@@ -157,14 +166,14 @@ def preemptive(queue, tasks_period_map):
 
 
 def non_preemptive(queue, tasks_period_map):
-    task_counter = []
     job_response_time = []
     leftover = []
     output = []
     cpu_current_time = 0
+    job_response_time = {}
 
     for task in queue:
-        task_name, execution_time, task_start_time, task_deadline = task
+        task_name, execution_time, task_start_time, task_deadline, job_no = task
         task_start_time = max(task_start_time, cpu_current_time)
         task_end_time = task_start_time + execution_time
         deadline_missed = task_end_time > task_deadline
@@ -173,13 +182,15 @@ def non_preemptive(queue, tasks_period_map):
                execution_time,
                task_start_time,
                task_end_time,
-               deadline_missed)
+               deadline_missed,
+               job_no)
 
-        print('task_name, execution_time, task_start_time, task_end_time, deadline_missed', job)
+        print('task_name, execution_time, task_start_time, task_end_time, deadline_missed, job_no', job)
 
-        task_count = task_counter.count(task_name)
-        job_response_time.append(
-            f'{task_name} Job{task_count}: {task_start_time - (task_count - 1) * tasks_period_map[task_name]}')
+        if task_name not in job_response_time:
+            job_response_time[task_name] = {}
+
+        job_response_time[task_name][job_no] = task_start_time - (job_no - 1) * tasks_period_map[task_name]
 
         cpu_current_time = task_end_time
 
@@ -196,6 +207,13 @@ def get_execution_time(no_of_instructions, cpu_capacity):
 
 def transfer_time(datasize, network_bw):
     return math.ceil(datasize / network_bw)
+
+
+def print_response_time(response_time):
+    for task in sorted(response_time.items()):
+        print(task[0])
+        for key, value in task[1].items():
+            print('Job', key, ', Response time', value)
 
 
 if __name__ == "__main__":
@@ -248,7 +266,7 @@ if __name__ == "__main__":
         execution_time = get_execution_time(no_of_instructions, cpu_capacity)
         calculated_tasks.append([task_name, execution_time, deadline, period, data_size])
 
-    print(calculated_tasks)
+    print('User input ', calculated_tasks)
 
     span = reduce(get_lcm, [task[2] for task in calculated_tasks])
     queue = create_queue(calculated_tasks, span)
@@ -264,10 +282,10 @@ if __name__ == "__main__":
     calc_offloadable = []
 
     for task in offloadable:
-        task_name, execution_time, task_start_time, task_deadline = task
+        task_name, execution_time, task_start_time, task_deadline, deadline_missed, job_no = task
         task_start_time += transfer_time(task_data_size_map[task_name], network_bandwidth)
         execution_time = get_execution_time(task_no_of_ins_map[task_name], network_cpu_capacity)
-        calc_offloadable.append([task_name, execution_time, task_start_time, task_deadline])
+        calc_offloadable.append([task_name, execution_time, task_start_time, task_deadline, job_no])
 
     print('New start time after network transfer', calc_offloadable)
 
@@ -275,15 +293,11 @@ if __name__ == "__main__":
     network_graph_data = get_graph(network_cpu_jobs)
 
     print('Primary CPU Job response time')
-    for task in sorted(primary_job_response_time.items()):
-        print(task[0])
-        for key, value in task[1].items():
-            print('Job', key, ', Response time', value)
+    print_response_time(primary_job_response_time)
 
     if len(calc_offloadable):
-        # print('Network CPU Job response time')
-        # for job in sorted(network_job_response_time):
-        #     print(job)
+        print('Network CPU Job response time')
+        print_response_time(network_job_response_time)
 
         print('Missed job count for each task')
         for key, value in Counter([job[0] for job in calc_offloadable]).items():
