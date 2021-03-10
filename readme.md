@@ -37,3 +37,22 @@ output the sequence of the schedule of tasks.
 - Example output:
   
 ![alt gantt_edf.png](gantt_edf.png)
+
+## Git workflow
+
+### Download project
+```git
+git clone https://github.com/pollmix/multiprocessor-edf.git
+```
+
+### Download latest code
+```bash
+git pull origin main
+```
+
+### Upload your code
+```bash
+git add .
+git commit -m "your message"
+git push origin main
+```
