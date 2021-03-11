@@ -295,22 +295,26 @@ if __name__ == "__main__":
     network_graph_data = get_graph(network_cpu_jobs)
 
     print('Cycle report')
-    for i in range(check_cycle, span + 1, check_cycle):
-        start = i - check_cycle + 1
+    for time in range(check_cycle, span + 1, check_cycle):
+        time_start = time - check_cycle + 1
         complete = []
         running = []
         offloaded = []
-        print(f"From time {start} to {i}")
+        print(f"From time {time_start} to {time}")
 
-        for a in primary_cpu_jobs:
-            if a[3] <= i and a[2] + 1 >= start:
-                complete.append(a)
-            elif a[2] + 1 >= start and a[2] + 1 <= i:
-                running.append(a)
+        for job in primary_cpu_jobs:
+            job_start_time = job[2] + 1
+            job_end_time = job[3]
+            if job_start_time >= time_start and job_end_time <= time:
+                complete.append(job)
+            elif job_start_time <= time and job_start_time >= time_start:
+                running.append(job)
 
-        for b in offloadable:
-            if b[3] <= i and b[2] + 1 >= start:
-                offloaded.append(b)
+        for job in offloadable:
+            job_start_time = job[2] + 1
+            job_end_time = job[3]
+            if job_start_time >= time_start and job_end_time <= time:
+                offloaded.append(job)
 
         print('complete', complete)
         print('running', running)
