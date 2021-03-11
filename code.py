@@ -244,12 +244,14 @@ if __name__ == "__main__":
     # no_of_cores = float((input('Enter the value of number of core: ')))
     # network_bandwidth = float((input('Enter the value of network bandwidth: ')))
     # scheduling_period = float((input('Enter the value of scheduling period: ')))
+    # check_cycle = int((input('Enter the value of check cycle: ')))
 
     v = 7.683
     o = -4558.52
     freq = 2.5  # cpu frequency in GHz
     no_of_cores = 1
     network_bandwidth = 16  # network BW in Mbps
+    check_cycle = 9
     # scheduling_period = 10
 
     cpu_capacity = ((v * (freq*1000) + o) * no_of_cores) * 0.001  # millons of instructions per milisecond
@@ -291,6 +293,28 @@ if __name__ == "__main__":
 
     network_cpu_jobs, network_job_response_time = non_preemptive(calc_offloadable, tasks_period_map)
     network_graph_data = get_graph(network_cpu_jobs)
+
+    print('Cycle report')
+    for i in range(check_cycle, span + 1, check_cycle):
+        start = i - check_cycle + 1
+        complete = []
+        running = []
+        offloaded = []
+        print(f"From time {start} to {i}")
+
+        for a in primary_cpu_jobs:
+            if a[3] <= i and a[2] + 1 >= start:
+                complete.append(a)
+            elif a[2] + 1 >= start and a[2] + 1 <= i:
+                running.append(a)
+
+        for b in offloadable:
+            if b[3] <= i and b[2] + 1 >= start:
+                offloaded.append(b)
+
+        print('complete', complete)
+        print('running', running)
+        print('offloaded', offloaded)
 
     print('Primary CPU Job response time')
     print_response_time(primary_job_response_time)
